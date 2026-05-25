@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tradingview-mcp-server"
-version = "0.7.1-custom"
+version = "0.7.1.post1"
 description = "Fork of tradingview-mcp-server with SET Thailand enhancements"
 requires-python = ">=3.10"
 dependencies = [
