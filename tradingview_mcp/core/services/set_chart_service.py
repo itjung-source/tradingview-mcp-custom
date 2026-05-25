@@ -2,12 +2,9 @@
 SET stock chart screenshot service.
 
 Uses Playwright (headless Chromium, async API) to capture a TradingView
-candlestick chart for any SET/MAI listed stock and returns it as a
-base64-encoded PNG.
+candlestick chart for any SET/MAI listed stock and returns raw PNG bytes.
 """
 from __future__ import annotations
-
-import base64
 
 # Interval label mapping
 INTERVAL_LABELS: dict[str, str] = {
@@ -25,14 +22,13 @@ async def capture_set_chart(symbol: str, interval: str = "D") -> dict:
 
     Args:
         symbol:   Thai SET/MAI stock symbol, e.g. KBANK, PTT, CHASE
-        interval: Timeframe — D (daily, default), W (weekly), M (monthly),
+        interval: Timeframe — D (daily), W (weekly), M (monthly),
                   60 (1-hour), 240 (4-hour)
 
     Returns:
         dict with keys:
-            label  (str)  — human-readable label
-            base64 (str)  — PNG screenshot encoded as base64
-            mime   (str)  — "image/png"
+            label     (str)   — human-readable label
+            png_bytes (bytes) — raw PNG screenshot bytes
     """
     from playwright.async_api import async_playwright  # lazy import
 
@@ -73,9 +69,8 @@ async def capture_set_chart(symbol: str, interval: str = "D") -> dict:
             await page.wait_for_timeout(6_000)   # wait for chart to fully render
             await page.keyboard.press("Escape")  # dismiss any popup/overlay
             await page.wait_for_timeout(1_000)
-            screenshot_bytes = await page.screenshot(type="png", full_page=False)
+            png_bytes = await page.screenshot(type="png", full_page=False)
         finally:
             await browser.close()
 
-    b64 = base64.b64encode(screenshot_bytes).decode("utf-8")
-    return {"label": label, "base64": b64, "mime": "image/png"}
+    return {"label": label, "png_bytes": png_bytes}

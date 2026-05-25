@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import os
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 
 # ── Service imports ────────────────────────────────────────────────────────────
 from tradingview_mcp.core.services.coinlist import load_symbols
@@ -900,10 +900,7 @@ async def set_stock_chart(symbol: str, interval: str = "D") -> list[dict]:
         set_stock_chart("PTT", "60")
     """
     result = await capture_set_chart(symbol, interval)
-    return [
-        {"type": "text", "text": result["label"]},
-        {"type": "image", "data": result["base64"], "mimeType": result["mime"]},
-    ]
+    return Image(data=result["png_bytes"], format="png")
 
 
 # ── Resource ───────────────────────────────────────────────────────────────────
