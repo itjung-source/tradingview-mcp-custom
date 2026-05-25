@@ -1,8 +1,9 @@
 """
 SET stock chart screenshot service.
 
-Uses Playwright (headless Chromium) to capture a TradingView candlestick chart
-for any SET/MAI listed stock and returns it as a base64-encoded PNG.
+Uses Playwright (headless Chromium, async API) to capture a TradingView
+candlestick chart for any SET/MAI listed stock and returns it as a
+base64-encoded PNG.
 """
 from __future__ import annotations
 
@@ -18,9 +19,9 @@ INTERVAL_LABELS: dict[str, str] = {
 }
 
 
-def get_set_chart(symbol: str, interval: str = "D") -> dict:
+async def capture_set_chart(symbol: str, interval: str = "D") -> dict:
     """
-    Screenshot a TradingView chart for a SET/MAI stock.
+    Async: Screenshot a TradingView chart for a SET/MAI stock.
 
     Args:
         symbol:   Thai SET/MAI stock symbol, e.g. KBANK, PTT, CHASE
@@ -33,7 +34,7 @@ def get_set_chart(symbol: str, interval: str = "D") -> dict:
             base64 (str)  — PNG screenshot encoded as base64
             mime   (str)  — "image/png"
     """
-    from playwright.sync_api import sync_playwright  # lazy import
+    from playwright.async_api import async_playwright  # lazy import
 
     sym = symbol.upper().strip()
     ticker = f"SET%3A{sym}"
@@ -52,12 +53,12 @@ def get_set_chart(symbol: str, interval: str = "D") -> dict:
 
     label = f"📊 กราฟ {sym} ({INTERVAL_LABELS.get(interval, interval)}) — TradingView"
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
             headless=True,
             args=["--no-sandbox", "--disable-setuid-sandbox"],
         )
-        context = browser.new_context(
+        context = await browser.new_context(
             viewport={"width": 1400, "height": 800},
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -66,16 +67,15 @@ def get_set_chart(symbol: str, interval: str = "D") -> dict:
             ),
             locale="th-TH",
         )
-        page = context.new_page()
+        page = await context.new_page()
         try:
-            page.goto(url, wait_until="networkidle", timeout=30_000)
-            page.wait_for_timeout(6_000)   # wait for chart to fully render
-            page.keyboard.press("Escape")  # dismiss any popup/overlay
-            page.wait_for_timeout(1_000)
-
-            screenshot_bytes = page.screenshot(type="png", full_page=False)
-            b64 = base64.b64encode(screenshot_bytes).decode("utf-8")
+            await page.goto(url, wait_until="networkidle", timeout=30_000)
+            await page.wait_for_timeout(6_000)   # wait for chart to fully render
+            await page.keyboard.press("Escape")  # dismiss any popup/overlay
+            await page.wait_for_timeout(1_000)
+            screenshot_bytes = await page.screenshot(type="png", full_page=False)
         finally:
-            browser.close()
+            await browser.close()
 
+    b64 = base64.b64encode(screenshot_bytes).decode("utf-8")
     return {"label": label, "base64": b64, "mime": "image/png"}

@@ -48,7 +48,7 @@ from tradingview_mcp.core.services.yahoo_finance_service import (
     get_market_snapshot,
 )
 from tradingview_mcp.core.services.set_financial_service import get_set_financials
-from tradingview_mcp.core.services.set_chart_service import get_set_chart
+from tradingview_mcp.core.services.set_chart_service import capture_set_chart
 from tradingview_mcp.core.services.backtest_service import (
     run_backtest,
     compare_strategies as _compare_strategies,
@@ -879,7 +879,7 @@ def set_stock_financial(symbol: str) -> dict:
 
 
 @mcp.tool()
-def set_stock_chart(symbol: str, interval: str = "D") -> list[dict]:
+async def set_stock_chart(symbol: str, interval: str = "D") -> list[dict]:
     """Screenshot a live TradingView candlestick chart for a SET/MAI listed stock.
 
     Uses headless Chromium (Playwright) to render the full TradingView chart page
@@ -899,7 +899,7 @@ def set_stock_chart(symbol: str, interval: str = "D") -> list[dict]:
         set_stock_chart("KBANK", "W")
         set_stock_chart("PTT", "60")
     """
-    result = get_set_chart(symbol, interval)
+    result = await capture_set_chart(symbol, interval)
     return [
         {"type": "text", "text": result["label"]},
         {"type": "image", "data": result["base64"], "mimeType": result["mime"]},
