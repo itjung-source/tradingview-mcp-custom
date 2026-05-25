@@ -48,6 +48,7 @@ from tradingview_mcp.core.services.yahoo_finance_service import (
     get_market_snapshot,
 )
 from tradingview_mcp.core.services.set_financial_service import get_set_financials
+from tradingview_mcp.core.services.set_chart_service import get_set_chart
 from tradingview_mcp.core.services.backtest_service import (
     run_backtest,
     compare_strategies as _compare_strategies,
@@ -875,6 +876,34 @@ def set_stock_financial(symbol: str) -> dict:
         set_stock_financial("FORTH")
     """
     return get_set_financials(symbol)
+
+
+@mcp.tool()
+def set_stock_chart(symbol: str, interval: str = "D") -> list[dict]:
+    """Screenshot a live TradingView candlestick chart for a SET/MAI listed stock.
+
+    Uses headless Chromium (Playwright) to render the full TradingView chart page
+    and returns the result as an inline image that Claude Desktop can display.
+
+    Args:
+        symbol:   Thai SET/MAI stock symbol — e.g. KBANK, PTT, ADVANC, DELTA, CHASE
+        interval: Chart timeframe:
+                    D   = รายวัน / Daily (default)
+                    W   = รายสัปดาห์ / Weekly
+                    M   = รายเดือน / Monthly
+                    60  = 1 ชั่วโมง / 1-hour
+                    240 = 4 ชั่วโมง / 4-hour
+
+    Example:
+        set_stock_chart("CHASE")
+        set_stock_chart("KBANK", "W")
+        set_stock_chart("PTT", "60")
+    """
+    result = get_set_chart(symbol, interval)
+    return [
+        {"type": "text", "text": result["label"]},
+        {"type": "image", "data": result["base64"], "mimeType": result["mime"]},
+    ]
 
 
 # ── Resource ───────────────────────────────────────────────────────────────────
