@@ -879,7 +879,7 @@ def set_stock_financial(symbol: str) -> dict:
 
 
 @mcp.tool()
-async def set_stock_chart(symbol: str, interval: str = "D") -> list[dict]:
+async def set_stock_chart(symbol: str, interval: str = "D") -> Image:
     """Screenshot a live TradingView candlestick chart for a SET/MAI listed stock.
 
     Uses headless Chromium (Playwright) to render the full TradingView chart page
